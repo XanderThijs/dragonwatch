@@ -10,3 +10,6 @@ node_modules/
 .DS_Store
 Thumbs.db
 .env
+
+# server-specific compose settings
+docker-compose.override.yml

@@ -29,18 +29,29 @@ adding `-v` deletes it. To use another port, change `8080` in the compose file.
 
 ### Behind a reverse proxy (optional)
 
-To serve Dragonwatch under a path such as `https://example.com/dragonwatch/` or on a domain with HTTPS, put any reverse proxy
-(Caddy, nginx, Traefik…) in front and set these in `docker-compose.yml`:
+To serve Dragonwatch under a path such as `https://example.com/dragonwatch/`, or on a domain with HTTPS, put any reverse proxy
+(Caddy, nginx, Traefik…) in front. Leave `docker-compose.yml` as it is and add a `docker-compose.override.yml` next to it; Docker Compose
+merges the two automatically. This one joins an existing Docker network called `web` (create it once with `docker network create web`),
+serves the app under `/dragonwatch/` and publishes no port:
 
 ```yaml
+services:
+  tracker:
+    ports: !reset []              # no published port: only the proxy reaches the container
     environment:
-      BASE_PATH: "/dragonwatch/"   # the path the proxy serves it under ("/" when there is none)
-      TRUST_PROXY: "1"             # the proxy sets X-Forwarded-For / X-Forwarded-Proto
-      COOKIE_SECURE: "1"           # when served over HTTPS
+      BASE_PATH: "/dragonwatch/"  # the path the proxy serves it under ("/" when there is none)
+      TRUST_PROXY: "1"            # the proxy sets X-Forwarded-For / X-Forwarded-Proto
+      # COOKIE_SECURE: "1"        # when served over HTTPS
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
 ```
 
 The proxy should strip the path prefix before passing requests on (Caddy: `handle_path /dragonwatch/* { reverse_proxy dragonwatch:3000 }`).
-The app itself works under any prefix.
+The app itself works under any prefix. `docker-compose.override.yml` is listed in `.gitignore`, so your server-specific settings stay out of the repository.
 
 ### Accounts & safety
 - Passwords are hashed (scrypt); sessions use an HttpOnly cookie; sign-in is rate limited and locks after repeated failures.
@@ -188,6 +199,7 @@ Starts the server on a free port with an empty database and checks the health ro
 bundled Encounter lab model and engine agree with each other. The same test runs on every push through GitHub Actions.
 
 ## Credits and licences
+- **Code:** MIT, see `LICENSE`.
 
 - **Monster data** (`server/srd-monsters.json`, `app/encounter/lab-monsters.json`) comes from the 5e System Reference Document 5.1 by Wizards of the Coast, available under the Creative Commons Attribution 4.0 licence (CC-BY-4.0), via the Open5e project and 5e-bits/5e-database. This work includes material taken from the SRD 5.1, which is © Wizards of the Coast LLC.
 - **Bestiary search** queries the public Open5e API (api.open5e.com), which also serves third-party open content under its own licences. Nothing from it is stored in this repository.
