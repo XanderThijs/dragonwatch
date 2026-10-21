@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build monsters.json for the Dragonwatch encounter generator.
+"""Build server/srd-monsters.json for the Dragonwatch encounter generator.
 
 Source: Open5e's open data (https://github.com/open5e/open5e-api, folder data/v1/<document>/Monster.json).
 The SRD 5.1 content (document "wotc-srd") is (c) Wizards of the Coast, licensed CC-BY-4.0.
@@ -55,7 +55,7 @@ def main(paths):
             seen.add(key)
             out.append(m)
     out.sort(key=lambda m: m["name"].lower())
-    dest = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "monsters.json")
+    dest = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "server", "srd-monsters.json")
     with open(dest, "w", encoding="utf-8") as fh:
         fh.write("[\n" + ",\n".join(json.dumps(m, ensure_ascii=False, separators=(",", ":")) for m in out) + "\n]\n")
     print(f"wrote {len(out)} monsters to {os.path.normpath(dest)}")

@@ -11,14 +11,14 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
-let encounterGen = null;   // SRD monster data for the Encounter lab dialog (encounter.js + monsters.json); the rest of the app works without it
+let encounterGen = null;   // SRD monster data for the Encounter lab dialog (encounter.js + srd-monsters.json); the rest of the app works without it
 try { encounterGen = require('./encounter'); encounterGen.options(); } catch (e) { encounterGen = null; console.warn('SRD monster data unavailable:', e.message); }
 let srdCache = null;
-const srdRecords = () => srdCache || (srdCache = JSON.parse(fs.readFileSync(path.join(__dirname, 'monsters.json'), 'utf8')));
+const srdRecords = () => srdCache || (srdCache = JSON.parse(fs.readFileSync(path.join(__dirname, 'srd-monsters.json'), 'utf8')));
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
-const STATIC_DIR = path.resolve(process.env.STATIC_DIR || path.join(__dirname, 'app'));
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
+const STATIC_DIR = path.resolve(process.env.STATIC_DIR || path.join(__dirname, '..', 'app'));
 const ALLOW_SIGNUP = process.env.ALLOW_SIGNUP === '1';          // anyone may create an account (off: only an admin can)
 const TRUST_PROXY = process.env.TRUST_PROXY === '1';            // behind a reverse proxy that sets X-Forwarded-*
 const COOKIE_PATH = (process.env.BASE_PATH || '/').replace(/\/*$/, '/');       // set to e.g. /dragonwatch/ when a proxy serves the app under a path

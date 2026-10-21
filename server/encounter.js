@@ -1,5 +1,5 @@
 /* Dragonwatch SRD monster data for the Encounter lab dialog.
-   Reads monsters.json (Open5e / SRD 5.1, CC-BY-4.0) and works out which environments each creature lives in, so the dialog can
+   Reads srd-monsters.json (Open5e / SRD 5.1, CC-BY-4.0) and works out which environments each creature lives in, so the dialog can
    offer an environment filter. (Encounters themselves are generated in the browser by the Encounter lab at /encounter/.)
 
    Pure and dependency-free: no network, no database. */
@@ -51,7 +51,7 @@ function prepare(list) {
   return out;
 }
 let defaultPool = null;
-function loadMonsters(file = path.join(__dirname, 'monsters.json')) {
+function loadMonsters(file = path.join(__dirname, 'srd-monsters.json')) {
   return prepare(JSON.parse(fs.readFileSync(file, 'utf8')));
 }
 function poolFor(monsters) {

@@ -1355,7 +1355,7 @@ async function ensureLab() {
     const s = document.createElement('script'); s.src = U('encounter/engine.js'); s.onload = res; s.onerror = () => rej(new Error('engine.js')); document.head.appendChild(s);
   });
   const get = f => fetch(U('encounter/' + f), { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(f); return r.json(); });
-  const [model, mons] = await Promise.all([get('model.json'), get('monsters.json')]);
+  const [model, mons] = await Promise.all([get('model.json'), get('lab-monsters.json')]);
   try { const e = await api('GET', '/api/encounter/envs'); LAB.envs = e.environments; LAB.env = e.monsters; } catch (x) { LAB.envs = []; LAB.env = {}; }
   try { labRoles = JSON.parse(lsGet(LAB_ROLE_KEY) || '{}') || {}; } catch (x) { labRoles = {}; }
   LAB.E = window.Engine; LAB.model = model; LAB.mons = mons.sort((x, y) => x.cr - y.cr || x.name.localeCompare(y.name));

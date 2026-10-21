@@ -18,7 +18,7 @@ Everything you save (campaigns, characters, bestiary, saved encounters, the runn
 Without Docker:
 
 ```bash
-node server.js          # http://localhost:3000, data in ./data
+node server/server.js    # http://localhost:3000, data in ./data
 ```
 
 Optional environment variables (see `docker-compose.yml`): `ALLOW_SIGNUP=1` lets others create their own accounts,
@@ -133,7 +133,7 @@ Shortcuts: `N` next turn, `P` previous turn, `Ctrl+Z` undo, `Esc` close dialogs.
 Needs Node 22.5+ and nothing else (no `npm install`):
 
 ```bash
-npm start                        # same as: node --no-warnings server.js
+npm start                        # same as: node --no-warnings server/server.js
 ```
 
 Then open http://localhost:3000. Data is stored in `./data` (set `DATA_DIR` to change it).
@@ -147,7 +147,7 @@ Use **+ Effect** on a card for spells and effects that last a set time (Bless, H
 Set up a fight, then **Save current encounter** (left column). Only monsters and NPCs are saved, grouped with a count, at full health; add the party with "Add whole party to combat". Encounters belong to the active campaign unless you tick "Available in every campaign". Click one to load it (add to the current fight or replace it); creatures are numbered automatically and roll fresh initiative. Stored on the server (`encounters` table), so every device sees them.
 
 ## Generate with Encounter lab (optional)
-The tracker's encounter generator is **Generate with Encounter lab** (it replaced the older XP-budget generator). It loads the Encounter lab's engine and trained model from the `app/encounter/` folder that ships with Dragonwatch (copies of the Encounter lab's `web/engine.js`, `web/model.json` and `web/monsters.json`; to update the model, train a new one there and copy those three files over), takes the party from the selected campaign, and builds fights from a monster pool that land on the win chance you choose. Each result is checked by a live simulation, and "Add to combat" puts the monsters in the tracker with initiative rolled (Undo takes it back).
+The tracker's encounter generator is **Generate with Encounter lab** (it replaced the older XP-budget generator). It loads the Encounter lab's engine and trained model from the `app/encounter/` folder that ships with Dragonwatch (copies of the Encounter lab's `web/engine.js`, `web/model.json` and `web/monsters.json`, here named `lab-monsters.json`; to update the model, train a new one there and copy those three files over), takes the party from the selected campaign, and builds fights from a monster pool that land on the win chance you choose. Each result is checked by a live simulation, and "Add to combat" puts the monsters in the tracker with initiative rolled (Undo takes it back).
 - **Pool:** SRD monsters (filter by CR, creature type, environment or pick specific ones) and your favorited monsters.
 - **Attack numbers for favorites:** the model needs attacks per round, to-hit and damage per hit, plus a CR, for each monster. Press the swords button on a favorite to enter them; favorites saved from the Bestiary search get them filled in automatically where the stat block allows. They are stored with the favorite (and included in backups and saved encounters). Favorites without them are simply left out of the pool.
 - **Party:** class, level, max and current HP, AC, initiative, spell slots and class features come from the characters (so a hurt or spent party is generated against as it is); attacks and damage come from the class table unless you typed *Combat numbers* on the character. The class can be changed per character in the dialog to try a different build.
@@ -155,18 +155,41 @@ The tracker's encounter generator is **Generate with Encounter lab** (it replace
 
 ## Project layout
 
-| Path | What it is |
-|---|---|
-| `server.js` | The whole backend: static files, REST API, accounts, SQLite (`node:sqlite`) |
-| `app/` | The browser app (plain HTML, CSS and JavaScript, no build step) and the bundled fonts |
-| `app/encounter/` | The Encounter lab engine and trained model used for the live win chance and the encounter generator |
-| `encounter.js`, `monsters.json` | SRD monster data for the generator (environments, creature lists) |
-| `tools/build-monsters.py` | Rebuilds `monsters.json` from the Open5e data |
-| `Dockerfile`, `docker-compose.yml` | One-command Docker setup |
+```
+dragonwatch/
+├── server/
+│   ├── server.js            the whole backend: static files, REST API, accounts, SQLite (node:sqlite)
+│   ├── encounter.js         environment lists for the encounter generator
+│   └── srd-monsters.json    SRD 5.1 creatures (Open5e format)
+├── app/                     the browser app: plain HTML, CSS and JavaScript, no build step
+│   ├── index.html, app.js, style.css, classes.js    the DM page
+│   ├── login.html, login.js                          sign-in and first-run setup
+│   ├── player.html, player.js                        the read-only player view
+│   ├── fonts/                                        bundled fonts
+│   └── encounter/                                    Encounter lab engine and trained model (see below)
+├── test/smoke.test.js       starts the real server and checks the main paths (npm test)
+├── tools/build-monsters.py  rebuilds server/srd-monsters.json from the Open5e data
+├── Dockerfile, docker-compose.yml
+└── package.json             npm start / npm test (no dependencies to install)
+```
+
+### Where the win-chance model comes from
+`app/encounter/` holds three files from the separate **Encounter lab** project: `engine.js` (a fight simulator and the model reader),
+`model.json` (gradient-boosted trees trained on simulated D&D fights) and `lab-monsters.json` (the SRD creatures reduced to the numbers
+the simulator needs). The training code is not part of this repository; the files here are everything Dragonwatch needs to run.
+
+## Tests
+
+```bash
+npm test
+```
+
+Starts the server on a free port with an empty database and checks the health route, first-run setup, the sign-in redirect and that the
+bundled Encounter lab model and engine agree with each other. The same test runs on every push through GitHub Actions.
 
 ## Credits and licences
 
-- **Monster data** (`monsters.json`) comes from the 5e System Reference Document 5.1 by Wizards of the Coast, available under the Creative Commons Attribution 4.0 licence (CC-BY-4.0), via the Open5e project and 5e-bits/5e-database. This work includes material taken from the SRD 5.1, which is © Wizards of the Coast LLC.
+- **Monster data** (`server/srd-monsters.json`, `app/encounter/lab-monsters.json`) comes from the 5e System Reference Document 5.1 by Wizards of the Coast, available under the Creative Commons Attribution 4.0 licence (CC-BY-4.0), via the Open5e project and 5e-bits/5e-database. This work includes material taken from the SRD 5.1, which is © Wizards of the Coast LLC.
 - **Bestiary search** queries the public Open5e API (api.open5e.com), which also serves third-party open content under its own licences. Nothing from it is stored in this repository.
 - **Fonts:** Cinzel and EB Garamond, SIL Open Font License 1.1, bundled in `app/fonts`.
 - Dragonwatch is an unofficial fan tool and is not affiliated with or endorsed by Wizards of the Coast.

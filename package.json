@@ -4,5 +4,5 @@
   "description": "Combat tracker and campaign manager for D&D 5e, with a live win-chance estimate. Zero dependencies.",
   "private": true,
   "engines": { "node": ">=22.5" },
-  "scripts": { "start": "node --no-warnings server.js" }
+  "scripts": { "start": "node --no-warnings server/server.js", "test": "node --test" }
 }
