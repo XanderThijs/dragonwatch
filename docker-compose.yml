@@ -1,0 +1,28 @@
+# Dragonwatch on its own: one container, one port, nothing else needed.
+#   docker compose up --build -d      then open http://localhost:8080
+# (Running behind a reverse proxy? See the README.)
+name: dragonwatch
+services:
+  tracker:
+    build: .
+    image: dragonwatch-tracker
+    container_name: dragonwatch
+    ports:
+      - "8080:3000"                # change the left number to use another port
+    volumes:
+      - dragonwatch-data:/data     # SQLite database lives here and survives rebuilds
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+      # ALLOW_SIGNUP: "1"          # let other people create their own accounts (default: only the admin adds users)
+      # COOKIE_SECURE: "1"         # set when you serve it over HTTPS
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  dragonwatch-data:

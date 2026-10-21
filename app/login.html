@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dragonwatch — Sign in</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9a441' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3C/svg%3E">
+<style>
+  body { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+  .gate { width: min(440px, 100%); }
+  .gate .brand { justify-content: center; margin-bottom: 22px; }
+  .gate .modal-card { max-height: none; }
+  .gate .modal-body { padding: 8px 28px 8px; }
+  .gate label { display: block; margin-bottom: 12px; }
+  .gate [hidden] { display: none !important; }
+  .gate .msg { min-height: 22px; margin: 4px 0 0; font-style: italic; color: var(--wax); }
+  .gate .msg.ok { color: #2f6b34; }
+  .gate .alt { margin: 14px 0 4px; text-align: center; font-style: italic; color: var(--ink-3); }
+  .gate .alt button { all: unset; cursor: pointer; color: var(--wax); text-decoration: underline; }
+  .gate .modal-actions { justify-content: center; }
+  .gate .tiny { margin: 6px 0 0; font-size: 13px; color: var(--ink-3); font-style: italic; }
+</style>
+</head>
+<body>
+<main class="gate">
+  <div class="brand">
+    <span class="brand-mark"><svg class="ic lg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+    <div><h1>Dragonwatch</h1><small>The Dungeon Master's Companion</small></div>
+  </div>
+  <form class="modal-card" id="gateForm" autocomplete="on">
+    <div class="modal-head"><h3 id="gateTitle">Sign in</h3></div>
+    <div class="modal-body">
+      <p class="live-hint" id="gateHint" style="margin-top:0"></p>
+      <label id="gUserRow">Username <input type="text" id="gUser" name="username" autocomplete="username" maxlength="32" required autofocus></label>
+      <label id="gPassRow"><span id="gPassLbl">Password</span> <input type="password" id="gPass" name="password" autocomplete="current-password" maxlength="200" required></label>
+      <label id="gNewRow" hidden>New password <input type="password" id="gNew" autocomplete="new-password" maxlength="200"></label>
+      <label id="gConfRow" hidden>Repeat password <input type="password" id="gConf" autocomplete="new-password" maxlength="200"></label>
+      <p class="tiny" id="gRules" hidden>At least 10 characters. A few random words make a strong password.</p>
+      <p class="msg" id="gMsg" role="alert"></p>
+      <p class="alt" id="gAlt" hidden></p>
+    </div>
+    <div class="modal-actions"><button type="submit" class="btn btn-primary" id="gGo">Sign in</button></div>
+  </form>
+</main>
+<script src="login.js"></script>
+</body>
+</html>

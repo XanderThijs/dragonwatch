@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dragonwatch — Player View</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9a441' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3C/svg%3E">
+<style>
+  .pv-main { max-width: 1040px; margin: 0 auto; padding: 30px 20px 90px; }
+  .pv-turn { margin-left: 8px; font: 800 13px var(--display); letter-spacing: .14em; text-transform: uppercase; color: rgba(234, 217, 173, .75); }
+  .pv-turn b { display: block; margin-top: 2px; font-size: 22px; letter-spacing: .06em; color: var(--gold-hi); text-shadow: 0 2px 0 #000; }
+  .pv .init-num { display: grid; place-items: center; cursor: default; }
+  .pv .name { cursor: default; flex: 0 1 auto; max-width: none; }
+  .pv .tag.status { color: var(--ink-2); border-color: rgba(107, 79, 29, .5); background: rgba(107, 79, 29, .1); }
+  .pv .hp-row { display: block; }
+  .pv .hpbar { height: 32px; }
+  .pv .hptext { font-size: 16px; letter-spacing: .06em; }
+  .pv .cond { cursor: default; padding-right: 9px; }
+  .pv-msg { text-align: center; margin: 90px auto; max-width: 520px; font-size: 22px; font-style: italic; color: rgba(234, 217, 173, .8); }
+  .pv-msg h2 { margin-bottom: 8px; font-size: 24px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-hi); }
+  .pv-foot { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; font-size: 14px; font-style: italic; color: rgba(234, 217, 173, .7); background: linear-gradient(180deg, transparent, rgba(8, 4, 2, .9) 40%); }
+  .pv-foot .live { color: #9ad07a; font-style: normal; font-weight: 700; }
+  .pv-foot .stale { color: #e7a35a; font-style: normal; font-weight: 700; }
+  .pv-zoom button { width: 34px; height: 30px; margin-left: 4px; cursor: pointer; color: var(--gold-hi); background: rgba(8, 4, 2, .6); border: 1px solid rgba(201, 162, 74, .5); border-radius: 4px; font: 800 14px var(--display); }
+  .pv .card { transition: transform .25s, opacity .25s, box-shadow .25s; }
+  .pv .card:not(.active) { opacity: .78; }
+  .pv .card.active { opacity: 1; transform: scale(1.025); outline: 3px solid var(--gold-hi); outline-offset: 3px;
+    box-shadow: inset 0 0 0 2px var(--parch-hi), 0 0 0 2px var(--gold), 0 0 42px 6px rgba(236, 212, 138, .75), 0 7px 16px rgba(0, 0, 0, .55); }
+  .pv .card.active .name { color: var(--wax); }
+  .pv .card.active::after { top: -14px; font-size: 12px; padding: 3px 18px; }
+  .pv .rpip { cursor: default; }
+  .pv .card { cursor: default; }
+  .pv-main { padding-bottom: 84px; }
+
+  /* cinematic layer: same parchment cards, staged like a title card */
+  .fx { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .fx::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 35%, transparent 40%, rgba(0, 0, 0, .55)); }
+  .ember { position: absolute; bottom: -12px; width: var(--s); height: var(--s); border-radius: 50%; background: radial-gradient(circle, #ffd27a, #e8561c 60%, transparent 70%); opacity: 0; animation: rise var(--d) linear var(--w) infinite; }
+  @keyframes rise { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: .85; } 100% { transform: translate(var(--x), -105vh); opacity: 0; } }
+  .pv-main { position: relative; z-index: 1; } .pv .topbar, .pv-foot { z-index: 3; }
+  .pv .topbar { position: sticky; }
+  .spotlight { position: relative; margin: 8px 0 34px; padding: 6px 0; }
+  .spotlight .card { position: relative; overflow: hidden; margin: 0; }
+  .spotlight .card .init { zoom: 1.35; }
+  @media (max-width: 640px) { .spotlight .card .init { zoom: 1; } }
+  .spotlight .card .name { font-size: clamp(30px, 5.4vw, 64px); line-height: 1.05; white-space: normal; }
+  .spotlight .card .cond { font-size: clamp(14px, 1.6vw, 20px); padding: 4px 12px 4px 10px; }
+  .spotlight .card .body { padding-block: clamp(14px, 2.2vw, 30px); }
+  .spotlight .kicker { margin: 0 0 14px 6px; font: 800 clamp(12px, 1.5vw, 16px) var(--display); letter-spacing: .32em; text-transform: uppercase; color: var(--gold-hi); text-shadow: 0 0 14px rgba(236, 212, 138, .6), 0 2px 0 #000; }
+  .spotlight .card::before { content: ""; position: absolute; top: 0; bottom: 0; width: 35%; left: -50%; background: linear-gradient(100deg, transparent, rgba(255, 246, 214, .55), transparent); transform: skewX(-18deg); pointer-events: none; }
+  .spotlight.enter .card { animation: slam .8s cubic-bezier(.2, 1.2, .3, 1); }
+  .spotlight.enter .card::before { animation: sweep 1.2s .15s ease-out; }
+  .spotlight.enter .kicker { animation: fadeup .6s ease-out; }
+  @keyframes slam { 0% { transform: scale(.9) translateY(24px); opacity: 0; filter: brightness(2); } 60% { opacity: 1; filter: brightness(1.2); } 100% { transform: scale(1.025); filter: none; } }
+  @keyframes sweep { to { left: 130%; } }
+  @keyframes fadeup { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .next-h { margin: 0 0 18px 6px; font: 800 13px var(--display); letter-spacing: .28em; text-transform: uppercase; color: rgba(234, 217, 173, .65); }
+  .pv .spotlight .card.active::after { display: none; }
+  .rbanner { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; pointer-events: none; opacity: 0; background: radial-gradient(ellipse, rgba(0, 0, 0, .78), rgba(0, 0, 0, .55)); }
+  .rbanner span { font: 800 clamp(48px, 14vw, 190px) var(--display); letter-spacing: .12em; color: var(--gold-hi); text-shadow: 0 4px 0 #000, 0 0 60px rgba(236, 160, 60, .8); }
+  .rbanner.go { animation: rb 2.2s ease both; } .rbanner.go span { animation: rbz 2.2s ease both; }
+  @keyframes rb { 0% { opacity: 0; } 15%, 70% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes rbz { 0% { transform: scale(.7); letter-spacing: .4em; } 30% { transform: scale(1); letter-spacing: .12em; } 100% { transform: scale(1.12); } }
+  @media (prefers-reduced-motion: reduce) { .ember { display: none; } .spotlight.enter *, .spotlight.enter .card::before, .rbanner.go, .rbanner.go span { animation: none !important; } }
+  .pv .card.dead { opacity: .5; }
+  .deathflash { position: fixed; inset: 0; z-index: 15; pointer-events: none; opacity: 0; background: radial-gradient(ellipse at center, rgba(120, 10, 10, .15) 30%, rgba(120, 10, 10, .75)); }
+  .deathflash.go { animation: dflash 1.6s ease-out both; }
+  @keyframes dflash { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
+  .pv .card.fall { animation: fall 1.7s ease-out both; z-index: 4; }
+  @keyframes fall {
+    0% { transform: none; filter: none; }
+    6%, 18%, 30% { transform: translateX(-9px) rotate(-.4deg); } 12%, 24%, 36% { transform: translateX(9px) rotate(.4deg); }
+    40% { transform: none; filter: brightness(1.5) saturate(2.5) sepia(.6) hue-rotate(-25deg); box-shadow: 0 0 40px 8px rgba(190, 30, 30, .9); }
+    100% { transform: translateY(6px); filter: grayscale(.85) sepia(.25); }
+  }
+  @media (prefers-reduced-motion: reduce) { .pv .card.fall, .deathflash.go { animation: none !important; } }
+  @media (max-height: 480px) { .pv .topbar { position: static; } }
+</style>
+</head>
+<body class="pv">
+<div class="fx" id="fx" aria-hidden="true"></div>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark"><svg class="ic lg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+    <div><h1>Dragonwatch</h1><small>The Battle Before You</small></div>
+  </div>
+  <div class="round-box"><div class="round-label">Round</div><div class="round-num" id="pvRound">–</div></div>
+  <div class="pv-turn" id="pvTurn"></div>
+</header>
+
+<main class="pv-main">
+  <section id="pvSpot" class="spotlight" hidden></section>
+  <div id="pvNextH" class="next-h" hidden>Up next</div>
+  <div id="pvList" class="list"></div>
+  <div id="pvMsg" class="pv-msg"><h2>Gathering the party…</h2></div>
+</main>
+
+<div class="deathflash" id="df"></div>
+<div class="rbanner" id="rb"><span id="rbT"></span></div>
+
+<div class="pv-foot">
+  <span id="pvStatus"></span>
+  <span class="pv-zoom">Text size <button id="zMinus" aria-label="Smaller">A−</button><button id="zPlus" aria-label="Larger">A+</button></span>
+</div>
+<script src="player.js"></script>
+</body>
+</html>

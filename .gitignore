@@ -1,0 +1,12 @@
+# local databases and backups (the Docker setup keeps its data in a volume, never in this folder)
+data/
+*.db
+*.db-journal
+*.sqlite
+*.zip
+
+# dependencies and system files
+node_modules/
+.DS_Store
+Thumbs.db
+.env
